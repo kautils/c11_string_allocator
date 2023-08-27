@@ -4,9 +4,9 @@ unset(__tmain)
 unset(__tmain_libs)
 unset(__alias )
 
-set(__main kautil_c11_string_allocator_static)
-set(__alias kautil::c11_string_allocator::static)
-set(__tmain tmain_kautil_c11_string_allocator_static)
+set(__main kautil_c11_string_allocator_${VERSION_ID}_static)
+set(__alias kautil::c11_string_allocator::${VERSION_ID}::static)
+set(__tmain tmain_kautil_c11_string_allocator_${VERSION_ID}_static)
 set(__tmain_mc TMAIN_KAUTIL_C11_STRING_ALLOCATOR_STATIC)
 set(__libs )
 
