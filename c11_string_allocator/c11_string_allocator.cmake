@@ -89,7 +89,6 @@ macro(KautilLibraryTemplate parse_prfx)
     install(TARGETS ${__t} EXPORT ${__t} DESTINATION ${__destination_lib_dir}) 
     set_target_properties(${__t} PROPERTIES EXPORT_NAME ${__alias} ) 
     install(EXPORT ${__t} FILE ${__exp_name}.cmake DESTINATION ${__destination_lib_dir}/cmake/${__exp_name})
-    return()
     export(EXPORT ${__t} FILE "${CMAKE_CURRENT_BINARY_DIR}/${__exp_name}.cmake")
     
     include(CMakePackageConfigHelpers)
@@ -118,11 +117,11 @@ set(${module_name}_common_pref
     #DEBUG_VERBOSE
     MODULE_PREFIX kautil
     MODULE_NAME ${module_name}
-    EXPORT_NAME_PREFIX ${PROJECT_NAME}
-    EXPORT_VERSION ${PROJECT_VERSION}
     INCLUDES $<BUILD_INTERFACE:${__include_dir}> $<INSTALL_INTERFACE:include> 
     SOURCES ${srcs}
     #LINK_LIBS 
+    EXPORT_NAME_PREFIX ${PROJECT_NAME}
+    EXPORT_VERSION ${PROJECT_VERSION}
     DESTINATION_INCLUDE_DIR include
     DESTINATION_CMAKE_DIR cmake
     DESTINATION_LIB_DIR lib
