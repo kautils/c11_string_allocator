@@ -19,7 +19,7 @@ macro(KautilLibraryTemplate parse_prfx)
     endmacro()
     
     set(__unset_vars)
-    cmake_parse_arguments( ${parse_prfx} "DEBUG_VERBOSE" "MODULE_NAME;EXPORT_NAME_PREFIX;EXPORT_VERSION;EXPORT_LIB_TYPE;DESTINATION_LIB_DIR" "MODULE_PREFIX;LINK_LIBS;DESTINATION_INCLUDE_DIR;DESTINATION_CMAKE_DIR" ${ARGV})
+    cmake_parse_arguments( ${parse_prfx} "DEBUG_VERBOSE" "MODULE_NAME;EXPORT_NAME_PREFIX;EXPORT_VERSION;EXPORT_LIB_TYPE;DESTINATION_LIB_DIR" "MODULE_PREFIX;LINK_LIBS;DESTINATION_INCLUDE_DIR;DESTINATION_CMAKE_DIR;SOURCES;INCLUDES" ${ARGV})
     
     list(APPEND __unset_vars __prfx_main __prfx_alias __PRFX_MAIN)
     foreach(prfx ${${parse_prfx}_MODULE_PREFIX})
@@ -39,15 +39,13 @@ macro(KautilLibraryTemplate parse_prfx)
     string(TOUPPER ${__module} __MODULE)
     
     
-    list(APPEND __unset_vars __include_dir __install_include_dir __install_libdir __libs)
-    get_filename_component(__include_dir "${CMAKE_CURRENT_LIST_DIR}" DIRECTORY)
-    set(__include_dir         $<BUILD_INTERFACE:${__include_dir}>)
-    set(__install_include_dir $<INSTALL_INTERFACE:include>)
-    set(__install_libdir lib)
+    list(APPEND __unset_vars __srcs __includes __libs)
+    set(__includes ${${parse_prfx}_INCLUDES})
     set(__libs ${${parse_prfx}_LINK_LIBS})
+    set(__srcs ${${parse_prfx}_SOURCES})
     
     
-    list(APPEND __unset_vars __destination_include_dirs __destination_cmake_dirs __install_libdir __destination_lib_dir)
+    list(APPEND __unset_vars __destination_include_dirs __destination_cmake_dirs __destination_lib_dir)
     set(__destination_include_dirs ${${parse_prfx}_DESTINATION_INCLUDE_DIR})
     set(__destination_cmake_dirs ${${parse_prfx}_DESTINATION_CMAKE_DIR})
     set(__destination_lib_dir ${${parse_prfx}_DESTINATION_LIBS_DIR})
@@ -55,6 +53,7 @@ macro(KautilLibraryTemplate parse_prfx)
     list(APPEND __unset_vars __main __alias) 
     set(__main ${__prfx_main}${__module}_${__exp_ver}_${__lib_type})
     set(__alias ${__prfx_alias}${__module}::${__exp_ver}::${__lib_type})
+    
     
     debug_print_vars("${__unset_vars}")
     
@@ -65,11 +64,12 @@ macro(KautilLibraryTemplate parse_prfx)
     
     add_library(${__t} ${__LIB_TYPE})
     add_library(${__alias} ALIAS ${__t})
-    unset(srcs)
-    file(GLOB srcs ${CMAKE_CURRENT_LIST_DIR}/*.cc)
-    target_sources(${__t} PRIVATE ${srcs})
+    target_sources(${__t} PRIVATE ${__srcs})
     target_link_libraries(${__t} PRIVATE ${__libs})
-    target_include_directories(${__t} PUBLIC ${__include_dir} ${__install_include_dir})
+    target_include_directories(${__t} PUBLIC 
+            $<BUILD_INTERFACE:D:/arrange/gcloud/kautil_sqlite3/third_party/c11_string_allocator/v0.0.1> 
+            $<INSTALL_INTERFACE:include> )
+    set_target_properties(${__t} PROPERTIES OUTPUT_NAME  ${__module})
     
     ##### INSTALL & EXPORT #####
     # install files
@@ -88,9 +88,10 @@ macro(KautilLibraryTemplate parse_prfx)
     endforeach()
     
     # cmake for find package
-    install(TARGETS ${__t} EXPORT ${__t} DESTINATION ${__install_libdir}) 
+    install(TARGETS ${__t} EXPORT ${__t} DESTINATION ${__destination_lib_dir}) 
     set_target_properties(${__t} PROPERTIES EXPORT_NAME ${__alias} ) 
-    install(EXPORT ${__t} FILE ${__exp_name}.cmake DESTINATION ${__install_libdir}/cmake/${__exp_name})
+    install(EXPORT ${__t} FILE ${__exp_name}.cmake DESTINATION ${__destination_lib_dir}/cmake/${__exp_name})
+    return()
     export(EXPORT ${__t} FILE "${CMAKE_CURRENT_BINARY_DIR}/${__exp_name}.cmake")
     
     include(CMakePackageConfigHelpers)
@@ -113,12 +114,16 @@ endmacro()
 
 
 get_filename_component(__include_dir "${CMAKE_CURRENT_LIST_DIR}" DIRECTORY)
+unset(srcs)
+file(GLOB srcs ${CMAKE_CURRENT_LIST_DIR}/*.cc)
 set(c11_string_allocator_common_pref
+    DEBUG_VERBOSE
     MODULE_PREFIX kautil
     MODULE_NAME c11_string_allocator
     EXPORT_NAME_PREFIX ${PROJECT_NAME}
     EXPORT_VERSION ${PROJECT_VERSION}
-    INCLUDE $<BUILD_INTEREFACE:${__include_dir}> $<INSTALL_INTERFACE:include> 
+    INCLUDES $<BUILD_INTEREFACE:${__include_dir}> $<INSTALL_INTERFACE:include> 
+    SOURCES ${srcs}
     LINK_LIBS 
     DESTINATION_INCLUDE_DIR include
     DESTINATION_CMAKE_DIR cmake
@@ -126,7 +131,7 @@ set(c11_string_allocator_common_pref
 )
 
 KautilLibraryTemplate(c11_string_allocator EXPORT_LIB_TYPE static ${c11_string_allocator_common_pref})
-#KautilLibraryTemplate(c11_string_allocator EXPORT_LIB_TYPE shared ${c11_string_allocator_common_pref})
+KautilLibraryTemplate(c11_string_allocator EXPORT_LIB_TYPE shared ${c11_string_allocator_common_pref})
 
 set(__t ${c11_string_allocator_static_tmain})
 add_executable(${__t})
