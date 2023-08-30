@@ -66,9 +66,7 @@ macro(KautilLibraryTemplate parse_prfx)
     add_library(${__alias} ALIAS ${__t})
     target_sources(${__t} PRIVATE ${__srcs})
     target_link_libraries(${__t} PRIVATE ${__libs})
-    target_include_directories(${__t} PUBLIC 
-            $<BUILD_INTERFACE:D:/arrange/gcloud/kautil_sqlite3/third_party/c11_string_allocator/v0.0.1> 
-            $<INSTALL_INTERFACE:include> )
+    target_include_directories(${__t} PUBLIC ${__includes})
     set_target_properties(${__t} PROPERTIES OUTPUT_NAME  ${__module})
     
     ##### INSTALL & EXPORT #####
@@ -112,30 +110,30 @@ macro(KautilLibraryTemplate parse_prfx)
     
 endmacro()
 
-
+set(module_name c11_string_allocator)
 get_filename_component(__include_dir "${CMAKE_CURRENT_LIST_DIR}" DIRECTORY)
 unset(srcs)
 file(GLOB srcs ${CMAKE_CURRENT_LIST_DIR}/*.cc)
-set(c11_string_allocator_common_pref
-    DEBUG_VERBOSE
+set(${module_name}_common_pref
+    #DEBUG_VERBOSE
     MODULE_PREFIX kautil
-    MODULE_NAME c11_string_allocator
+    MODULE_NAME ${module_name}
     EXPORT_NAME_PREFIX ${PROJECT_NAME}
     EXPORT_VERSION ${PROJECT_VERSION}
-    INCLUDES $<BUILD_INTEREFACE:${__include_dir}> $<INSTALL_INTERFACE:include> 
+    INCLUDES $<BUILD_INTERFACE:${__include_dir}> $<INSTALL_INTERFACE:include> 
     SOURCES ${srcs}
-    LINK_LIBS 
+    #LINK_LIBS 
     DESTINATION_INCLUDE_DIR include
     DESTINATION_CMAKE_DIR cmake
     DESTINATION_LIB_DIR lib
 )
 
-KautilLibraryTemplate(c11_string_allocator EXPORT_LIB_TYPE static ${c11_string_allocator_common_pref})
-KautilLibraryTemplate(c11_string_allocator EXPORT_LIB_TYPE shared ${c11_string_allocator_common_pref})
+KautilLibraryTemplate(${module_name} EXPORT_LIB_TYPE static ${${module_name}_common_pref})
+KautilLibraryTemplate(${module_name} EXPORT_LIB_TYPE shared ${${module_name}_common_pref})
 
-set(__t ${c11_string_allocator_static_tmain})
+set(__t ${${module_name}_static_tmain})
 add_executable(${__t})
 target_sources(${__t} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/unit_test.cc)
-target_link_libraries(${__t} PRIVATE ${c11_string_allocator_static})
-target_compile_definitions(${__t} PRIVATE ${c11_string_allocator_static_tmain_ppcs})
+target_link_libraries(${__t} PRIVATE ${${module_name}_static})
+target_compile_definitions(${__t} PRIVATE ${${module_name}_static_tmain_ppcs})
 
