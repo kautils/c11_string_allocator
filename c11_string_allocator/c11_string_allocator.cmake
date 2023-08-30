@@ -1,65 +1,62 @@
-unset(__main) 
-unset(__libs)
-unset(__tmain)
-unset(__tmain_libs)
-unset(__alias )
-unset(__module )
-unset(__MODULE )
-
 macro(KautilLibraryTemplate parse_prfx)
     
+    macro(unsetter list)
+        foreach(__var ${list})
+            unset(${__var})
+        endforeach()
+        unset(__var)
+    endmacro()
+    
+    macro(debug_print_vars list)
+        if( ${parse_prfx}_DEBUG_VERBOSE)
+            include(CMakePrintHelpers)
+            foreach(__var ${list})
+                cmake_print_variables(${__var})
+            endforeach()
+            message(WARNING ${parse_prfx}_DEBUG_VERBOSE)
+            unset(__var)
+        endif()
+    endmacro()
+    
+    set(__unset_vars)
     cmake_parse_arguments( ${parse_prfx} "DEBUG_VERBOSE" "MODULE_NAME;EXPORT_NAME_PREFIX;EXPORT_VERSION;EXPORT_LIB_TYPE;DESTINATION_LIB_DIR" "MODULE_PREFIX;LINK_LIBS;DESTINATION_INCLUDE_DIR;DESTINATION_CMAKE_DIR" ${ARGV})
     
-    set(__prfx_main)
-    set(__prfx_alias)
-    set(__PRFX_MAIN)
+    list(APPEND __unset_vars __prfx_main __prfx_alias __PRFX_MAIN)
     foreach(prfx ${${parse_prfx}_MODULE_PREFIX})
         string(APPEND __prfx_main ${prfx}_)
         string(APPEND __prfx_alias ${prfx}::)
     endforeach()
     string(TOUPPER ${__prfx_main} __PRFX_MAIN)
     
-    
+    list(APPEND __unset_vars __lib_type __LIB_TYPE)
     string(TOLOWER ${${parse_prfx}_EXPORT_LIB_TYPE} __lib_type)
     string(TOUPPER ${${parse_prfx}_EXPORT_LIB_TYPE} __LIB_TYPE)
+    
+    list(APPEND __unset_vars __exp_name __exp_ver __module)
     set(__exp_name  ${${parse_prfx}_EXPORT_NAME_PREFIX}.${__lib_type})
     set(__exp_ver ${${parse_prfx}_EXPORT_VERSION})
     set(__module ${${parse_prfx}_MODULE_NAME})
     string(TOUPPER ${__module} __MODULE)
     
     
+    list(APPEND __unset_vars __include_dir __install_include_dir __install_libdir __libs)
     get_filename_component(__include_dir "${CMAKE_CURRENT_LIST_DIR}" DIRECTORY)
     set(__include_dir         $<BUILD_INTERFACE:${__include_dir}>)
     set(__install_include_dir $<INSTALL_INTERFACE:include>)
     set(__install_libdir lib)
     set(__libs ${${parse_prfx}_LINK_LIBS})
     
+    
+    list(APPEND __unset_vars __destination_include_dirs __destination_cmake_dirs __install_libdir __destination_lib_dir)
     set(__destination_include_dirs ${${parse_prfx}_DESTINATION_INCLUDE_DIR})
     set(__destination_cmake_dirs ${${parse_prfx}_DESTINATION_CMAKE_DIR})
     set(__destination_lib_dir ${${parse_prfx}_DESTINATION_LIBS_DIR})
     
-    
+    list(APPEND __unset_vars __main __alias) 
     set(__main ${__prfx_main}${__module}_${__exp_ver}_${__lib_type})
     set(__alias ${__prfx_alias}${__module}::${__exp_ver}::${__lib_type})
-    if( ${parse_prfx}_DEBUG_VERBOSE)
-        include(CMakePrintHelpers)
-        cmake_print_variables(__main)
-        cmake_print_variables(__alias)
-        cmake_print_variables(__exp_name)
-        cmake_print_variables(__exp_ver)
-        cmake_print_variables(__lib_type)
-        cmake_print_variables(__LIB_TYPE)
-        cmake_print_variables(__MODULE)
-        cmake_print_variables(__include_dir)
-        cmake_print_variables(__install_include_dir)
-        cmake_print_variables(__install_libdir)
-        cmake_print_variables(__libs)
-        cmake_print_variables(__destination_include_dirs)
-        cmake_print_variables(__destination_cmake_dirs)
-        cmake_print_variables(__destination_lib_dir)
-        message(WARNING ${parse_prfx}_DEBUG_VERBOSE)
-    endif()
     
+    debug_print_vars("${__unset_vars}")
     
     set(__t ${__main})
     set(${parse_prfx}_${__lib_type} ${__t})
@@ -109,11 +106,14 @@ macro(KautilLibraryTemplate parse_prfx)
       VERSION "${__exp_ver}" 
       COMPATIBILITY AnyNewerVersion
     )
+    
+    unsetter("${__unset_vars}")
+    
 endmacro()
 
 
 get_filename_component(__include_dir "${CMAKE_CURRENT_LIST_DIR}" DIRECTORY)
-set(common_pref
+set(c11_string_allocator_common_pref
     MODULE_PREFIX kautil
     MODULE_NAME c11_string_allocator
     EXPORT_NAME_PREFIX ${PROJECT_NAME}
@@ -125,8 +125,8 @@ set(common_pref
     DESTINATION_LIB_DIR lib
 )
 
-KautilLibraryTemplate(c11_string_allocator ${common_pref} EXPORT_LIB_TYPE static)
-KautilLibraryTemplate(c11_string_allocator ${common_pref} EXPORT_LIB_TYPE shared)
+KautilLibraryTemplate(c11_string_allocator EXPORT_LIB_TYPE static ${c11_string_allocator_common_pref})
+#KautilLibraryTemplate(c11_string_allocator EXPORT_LIB_TYPE shared ${c11_string_allocator_common_pref})
 
 set(__t ${c11_string_allocator_static_tmain})
 add_executable(${__t})
