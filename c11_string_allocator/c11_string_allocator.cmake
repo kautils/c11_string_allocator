@@ -19,7 +19,7 @@ macro(KautilLibraryTemplate parse_prfx)
     endmacro()
     
     set(__unset_vars)
-    cmake_parse_arguments( ${parse_prfx} "DEBUG_VERBOSE" "MODULE_NAME;EXPORT_NAME_PREFIX;EXPORT_VERSION;EXPORT_VERSION_COMPATIBILITY;EXPORT_LIB_TYPE;DESTINATION_LIB_DIR" "MODULE_PREFIX;LINK_LIBS;DESTINATION_INCLUDE_DIR;DESTINATION_CMAKE_DIR;SOURCES;INCLUDES" ${ARGV})
+    cmake_parse_arguments( ${parse_prfx} "DEBUG_VERBOSE" "MODULE_NAME;EXPORT_NAME_PREFIX;EXPORT_VERSION;EXPORT_VERSION_COMPATIBILITY;EXPORT_CONFIG_IN_FILE;EXPORT_LIB_TYPE;DESTINATION_LIB_DIR" "MODULE_PREFIX;LINK_LIBS;DESTINATION_INCLUDE_DIR;DESTINATION_CMAKE_DIR;SOURCES;INCLUDES" ${ARGV})
     
     list(APPEND __unset_vars __prfx_main __prfx_alias __PRFX_MAIN)
     foreach(prfx ${${parse_prfx}_MODULE_PREFIX})
@@ -36,9 +36,10 @@ macro(KautilLibraryTemplate parse_prfx)
         set(__module ${${parse_prfx}_MODULE_NAME})
         string(TOUPPER ${__module} __MODULE)
     
-    list(APPEND __unset_vars __exp_compat __exp_name __exp_ver)
+    list(APPEND __unset_vars __exp_compat __exp_name __exp_ver __exp_config_in)
         set(__exp_name  ${${parse_prfx}_EXPORT_NAME_PREFIX}.${__lib_type})
         set(__exp_ver ${${parse_prfx}_EXPORT_VERSION})
+        set(__exp_config_in ${${parse_prfx}_EXPORT_CONFIG_IN_FILE})
         set(__exp_compat ${${parse_prfx}_EXPORT_VERSION_COMPATIBILITY})
     
     
@@ -94,24 +95,39 @@ macro(KautilLibraryTemplate parse_prfx)
     install(EXPORT ${__t} FILE ${__exp_name}.cmake DESTINATION ${__destination_lib_dir}/cmake/${__exp_name})
     export(EXPORT ${__t} FILE "${CMAKE_CURRENT_BINARY_DIR}/${__exp_name}.cmake")
     
+    
+    list(APPEND __unset_vars __config_in_content __exp_config_in)
+    if(NOT EXISTS ${__exp_config_in})
+        if(NOT DEFINED __exp_config_in)
+            set(__exp_config_in "${CMAKE_CURRENT_LIST_DIR}/${__module}.${__lib_type}.config.cmake.in")
+        endif()
+        string(APPEND __config_in_content
+                set(@PROJECT_NAME@_VERSION @PROJECT_VERSION@) 
+                \n @PACKAGE_INIT@
+                \n set(@PROJECT_NAME@_DIR "\${CMAKE_CURRENT_LIST_DIR}") 
+                \n set(@PROJECT_NAME@_SYSCONFIG_DIR "\${CMAKE_CURRENT_LIST_DIR}")
+                \n include(\${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@.${__lib_type}.cmake)
+                \n check_required_components(@PROJECT_NAME@)
+                )
+        file(WRITE "${__exp_config_in}" ${__config_in_content})
+    endif()
+    
     include(CMakePackageConfigHelpers)
     foreach(include_dest ${__destination_cmake_dirs})
         # Config.cmake
         configure_package_config_file( 
-          "${CMAKE_CURRENT_LIST_DIR}/Config.cmake.in"
+          "${__exp_config_in}"
           "${CMAKE_CURRENT_BINARY_DIR}/${__exp_name}Config.cmake"
           INSTALL_DESTINATION "${__destination_lib_dir}/${include_dest}/${__exp_name}"
         )
     endforeach()
-    
+        
     # ConfigVersion.cmake
     write_basic_package_version_file( 
       "${CMAKE_CURRENT_BINARY_DIR}/${__exp_name}ConfigVersion.cmake"
       VERSION "${__exp_ver}" 
       COMPATIBILITY ${__exp_compat}
     )
-    
-    
     
     unsetter("${__unset_vars}")
     
@@ -137,8 +153,8 @@ set(${module_name}_common_pref
     DESTINATION_LIB_DIR lib
 )
 
-KautilLibraryTemplate(${module_name} EXPORT_LIB_TYPE static ${${module_name}_common_pref})
-#KautilLibraryTemplate(${module_name} EXPORT_LIB_TYPE shared ${${module_name}_common_pref})
+KautilLibraryTemplate(${module_name} EXPORT_LIB_TYPE static ${${module_name}_common_pref} )
+KautilLibraryTemplate(${module_name} EXPORT_LIB_TYPE shared ${${module_name}_common_pref} )
 
 set(__t ${${module_name}_static_tmain})
 add_executable(${__t})
