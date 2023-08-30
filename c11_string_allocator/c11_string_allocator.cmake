@@ -67,7 +67,7 @@ macro(KautilLibraryTemplate parse_prfx)
     target_sources(${__t} PRIVATE ${__srcs})
     target_link_libraries(${__t} PRIVATE ${__libs})
     target_include_directories(${__t} PUBLIC ${__includes})
-    set_target_properties(${__t} PROPERTIES OUTPUT_NAME  ${__module})
+    set_target_properties(${__t} PROPERTIES OUTPUT_NAME  ${__prfx_main}${__module})
     
     ##### INSTALL & EXPORT #####
     # install files
@@ -128,7 +128,7 @@ set(${module_name}_common_pref
 )
 
 KautilLibraryTemplate(${module_name} EXPORT_LIB_TYPE static ${${module_name}_common_pref})
-KautilLibraryTemplate(${module_name} EXPORT_LIB_TYPE shared ${${module_name}_common_pref})
+#KautilLibraryTemplate(${module_name} EXPORT_LIB_TYPE shared ${${module_name}_common_pref})
 
 set(__t ${${module_name}_static_tmain})
 add_executable(${__t})
