@@ -48,7 +48,7 @@ macro(KautilLibraryTemplate parse_prfx)
     list(APPEND __unset_vars __destination_include_dirs __destination_cmake_dirs __destination_lib_dir)
     set(__destination_include_dirs ${${parse_prfx}_DESTINATION_INCLUDE_DIR})
     set(__destination_cmake_dirs ${${parse_prfx}_DESTINATION_CMAKE_DIR})
-    set(__destination_lib_dir ${${parse_prfx}_DESTINATION_LIBS_DIR})
+    set(__destination_lib_dir ${${parse_prfx}_DESTINATION_LIB_DIR})
     
     list(APPEND __unset_vars __main __alias) 
     set(__main ${__prfx_main}${__module}_${__exp_ver}_${__lib_type})
@@ -81,7 +81,7 @@ macro(KautilLibraryTemplate parse_prfx)
             ${CMAKE_CURRENT_BINARY_DIR}/${__exp_name}.cmake
             ${CMAKE_CURRENT_BINARY_DIR}/${__exp_name}Config.cmake
             ${CMAKE_CURRENT_BINARY_DIR}/${__exp_name}ConfigVersion.cmake
-            DESTINATION lib/${include_dest}/${__exp_name}
+            DESTINATION ${__destination_lib_dir}/${include_dest}/${__exp_name}
         )
     endforeach()
     
@@ -92,12 +92,15 @@ macro(KautilLibraryTemplate parse_prfx)
     export(EXPORT ${__t} FILE "${CMAKE_CURRENT_BINARY_DIR}/${__exp_name}.cmake")
     
     include(CMakePackageConfigHelpers)
-    # Config.cmake
-    configure_package_config_file( 
-      "${CMAKE_CURRENT_LIST_DIR}/Config.cmake.in"
-      "${CMAKE_CURRENT_BINARY_DIR}/${__exp_name}Config.cmake"
-      INSTALL_DESTINATION "lib/cmake/${__exp_name}"
-    )
+    foreach(include_dest ${__destination_cmake_dirs})
+        # Config.cmake
+        configure_package_config_file( 
+          "${CMAKE_CURRENT_LIST_DIR}/Config.cmake.in"
+          "${CMAKE_CURRENT_BINARY_DIR}/${__exp_name}Config.cmake"
+          INSTALL_DESTINATION "${__destination_lib_dir}/${include_dest}/${__exp_name}"
+        )
+    endforeach()
+    
     # ConfigVersion.cmake
     write_basic_package_version_file( 
       "${CMAKE_CURRENT_BINARY_DIR}/${__exp_name}ConfigVersion.cmake"
