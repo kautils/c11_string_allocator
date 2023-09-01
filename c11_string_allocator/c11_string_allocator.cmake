@@ -1,14 +1,14 @@
 if(NOT DEFINED KAUTIL_THIRD_PARTY_DIR)
-    set(KAUTIL_THIRD_PARTY_DIR ${CMAKE_CURRENT_BINARY_DIR}/third_party)
+    set(KAUTIL_THIRD_PARTY_DIR ${CMAKE_BINARY_DIR}/third_party)
     file(MAKE_DIRECTORY "${KAUTIL_THIRD_PARTY_DIR}")
 endif()
 
 macro(git_clone url)
     get_filename_component(file_name ${url} NAME)
     if(NOT EXISTS ${KAUTIL_THIRD_PARTY_DIR}/cmake/${file_name})
-        file(DOWNLOAD ${url} "${KAUTIL_THIRD_PARTY_DIR}/cmake/${file_name}")
+        file(DOWNLOAD ${url} "${KAUTIL_THIRD_PARTY_DIR}/kautil_cmake/${file_name}")
     endif()
-    include("${KAUTIL_THIRD_PARTY_DIR}/cmake/${file_name}")
+    include("${KAUTIL_THIRD_PARTY_DIR}/kautil_cmake/${file_name}")
     unset(file_name)
 endmacro()
 
