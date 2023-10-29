@@ -2,7 +2,6 @@ set(${PROJECT_NAME}_m_evacu ${m})
 set(m ${PROJECT_NAME})
 list(APPEND ${m}_unsetter )
 
-
 set(${m}_kautil_cmake_heeder CMakeKautilHeader.v0.0.cmake)
 if(DEFINED KAUTIL_THIRD_PARTY_DIR AND EXISTS "${KAUTIL_THIRD_PARTY_DIR}/${${m}_kautil_cmake_heeder}")
     include("${KAUTIL_THIRD_PARTY_DIR}/${${m}_kautil_cmake_heeder}")
@@ -12,6 +11,7 @@ else()
     endif()
     include(${CMAKE_BINARY_DIR}/${${m}_kautil_cmake_heeder})
 endif()
+git_clone(https://raw.githubusercontent.com/kautils/CMakeLibrarytemplate/v0.0.1/CMakeLibrarytemplate.cmake)
 
 set(module_name c11_string_allocator)
 unset(srcs)
